@@ -1,38 +1,23 @@
-version: '2.2'
+version: "3"
 services:
-    mongo-0:
-      image: mongo:4.1-xenial
-      logging:
-        driver: none
-      container_name: c-mongo
-      command: /scripts/mongo-run.sh
-      working_dir: /scripts
-      volumes:
-        - ./mongodb/scripts:/scripts
-      environment:
-        MONGO_REPLICA_SET_NAME: rs0
-        MONGO_REPLICAS: mongo-0:27017
-        MONGO_REPLICA_SET_MEMBERS: "[{'_id':0,'host':'mongo-0:27017','priority':1}]"
-        MONGO_USER_ROOT_NAME: root-user
-        MONGO_USER_ROOT_PASSWORD: password
-        MONGO_AUTH_SOURCE: admin
-        # MONGO_BIND_IP: "0.0.0.0"
-        MONGO_DB_NAME: test
-        MONGO_USER_ADMIN_NAME: admin-user
-        MONGO_USER_ADMIN_PASSWORD: password
-        MONGO_USER_APP_NAME: app-user
-        MONGO_USER_APP_PASSWORD: password
-        MONGO_USER_OPLOGGER_NAME: oplogger-user
-        MONGO_USER_OPLOGGER_PASSWORD: password
-        MONGO_USER_BACKUP_NAME: backup-user
-        MONGO_USER_BACKUP_PASSWORD: password
-      ports:
+mongodb:
+    container_name: mongodb
+    image: 'docker.io/bitnami/mongodb:4.2-debian-10'
+    ports:
         - "27017:27017"
-      networks:
-        - test
-      healthcheck:
-        test: "[ -f /data/health.check ] && exit 0 || exit 1"
-        interval: 1s
-        timeout: 30s
-        retries: 300
-      restart: unless-stopped
+    volumes:
+        - "mongodb_data:/bitnami/mongodb"
+        - "./mongodb/scripts:/docker-entrypoint-initdb.d"
+    environment:
+        - MONGODB_INITSCRIPTS_DIR=/docker-entrypoint-initdb.d
+        - MONGODB_USERNAME=some_username
+        - MONGODB_PASSWORD=some_password
+        - MONGODB_DATABASE=some_db_name
+    networks:
+        backend:
+    restart: unless-stopped
+volumes:
+    mongodb_data:
+networks:
+    backend:
+        driver: bridge

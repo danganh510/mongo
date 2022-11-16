@@ -1,39 +1,29 @@
-version: '3.6'
+version: "3.2"
 services:
-  my-mongodb:
-    image: mongo:4.2.3-bionic
-    container_name: my-mongodb
+
+ redis:
+    image: "redis:alpine"
+
+    command: redis-server --requirepass sOmE_sEcUrE_pAsS
+
     ports:
-      - 27017:27017
-    environment:
-      - MONGO_INITDB_DATABASE=test
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
+     - "6379:6379"
+
     volumes:
-      - ./mongo-entrypoint:/docker-entrypoint-initdb.d
-      - mongodb:/data/db
-      - mongoconfig:/data/configdb
-    networks:
-      - mongo_net
+     - ./redis-data:/var/lib/redis
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
 
-  my-mongoclient:
-    build: ./my-mongoclient
-    image: fabianlee/my-mongoclient:3.9
-    container_name: my-mongoclient
     environment:
-      - MONGO_SERVER=my-mongodb
-      - MONGO_INITDB_DATABASE=test
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
-    networks:
-      - mongo_net
-    depends_on:
-      - my-mongodb
-    
-volumes:
-  mongodb:
-  mongoconfig:
+     - REDIS_REPLICATION_MODE=master
 
+    networks:
+      node_net:
+        ipv4_address: 172.26.0.188
+
+# networking for the Redis container
 networks:
-  mongo_net:
-    driver: bridge
+  node_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.26.0.0/16

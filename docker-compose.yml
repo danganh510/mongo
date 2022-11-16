@@ -1,23 +1,39 @@
-version: "3"
+version: '3.6'
 services:
-mongodb:
-    container_name: mongodb
-    image: 'docker.io/bitnami/mongodb:4.2-debian-10'
+  my-mongodb:
+    image: mongo:4.2.3-bionic
+    container_name: my-mongodb
     ports:
-        - "27017:27017"
-    volumes:
-        - "mongodb_data:/bitnami/mongodb"
-        - "./mongodb/scripts:/docker-entrypoint-initdb.d"
+      - 27017:27017
     environment:
-        - MONGODB_INITSCRIPTS_DIR=/docker-entrypoint-initdb.d
-        - MONGODB_USERNAME=some_username
-        - MONGODB_PASSWORD=some_password
-        - MONGODB_DATABASE=some_db_name
+      - MONGO_INITDB_DATABASE=test
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      - ./mongo-entrypoint:/docker-entrypoint-initdb.d
+      - mongodb:/data/db
+      - mongoconfig:/data/configdb
     networks:
-        backend:
-    restart: unless-stopped
+      - mongo_net
+
+  my-mongoclient:
+    build: ./my-mongoclient
+    image: fabianlee/my-mongoclient:3.9
+    container_name: my-mongoclient
+    environment:
+      - MONGO_SERVER=my-mongodb
+      - MONGO_INITDB_DATABASE=test
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    networks:
+      - mongo_net
+    depends_on:
+      - my-mongodb
+    
 volumes:
-    mongodb_data:
+  mongodb:
+  mongoconfig:
+
 networks:
-    backend:
-        driver: bridge
+  mongo_net:
+    driver: bridge
